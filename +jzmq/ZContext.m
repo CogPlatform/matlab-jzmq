@@ -18,7 +18,8 @@ classdef ZContext < handle
 			end
 
 			if ~any(contains(javaclasspath, 'jeromq-0.6.0.jar'))
-				javaaddpath('jeromq-0.6.0.jar','-begin');
+				p = fileparts(mfilename('fullpath'));
+				javaaddpath([p filesep 'jeromq-0.6.0.jar'],'-begin');
 				fprintf('Added JeroMQ jar to javaclasspath.\n');
 			end
 
