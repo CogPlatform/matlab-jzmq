@@ -1,7 +1,8 @@
 classdef Poller < handle
 	%Poller  Encapsulates a ZeroMQ poller using JeroMQ ZMQ.Poller.
     properties ( GetAccess = public, SetAccess = private )
-        pollerPointer % org.zeromq.ZMQ.Poller
+        pointer % org.zeromq.ZMQ.Poller
+		socket
     end
 
     methods
@@ -15,7 +16,7 @@ classdef Poller < handle
 			%   Outputs:
 			%       obj     - A ZMQ.Poller object.
 
-            obj.pollerPointer = pointer;
+            obj.pointer = pointer;
         end
 
         function register(obj, socket, event)
@@ -25,15 +26,17 @@ classdef Poller < handle
 			%   Inputs:
 			%       obj     - A jzmq.ZMQ.Poller object.
 			%       socket  - The Socket we are registering.
-			%       events  - A mask composed by XORing POLLIN, POLLOUT and POLLERR.
+			%       events  - A mask composed by BITORing POLLIN, POLLOUT and POLLERR.
 
             arguments
                 obj
                 socket (1, 1) jzmq.ZMQ.Socket
-                event (1, 1) jzmq.ZMQ.PollerEvent
-            end
+                event (1, 1) int32 = 1
+			end
 
-            obj.pollerPointer.register(socket.pointer, int32(event));
+			obj.socket = socket;
+
+            obj.pointer.register(socket.pointer, int32(event));
         end
 
         function events = poll(obj, tout)
@@ -51,13 +54,28 @@ classdef Poller < handle
 
             arguments (Input)
                 obj
-                tout (1, 1) double
+                tout (1, 1) double = 0
             end
             arguments (Output)
                 events (1, 1) double
             end
 
-            events = obj.pollerPointer.poll(tout);
-        end
+            events = obj.pointer.poll(tout);
+		end
+
+		function result = pollin(obj)
+			obj.register(obj.socket.pointer, jzmq.ZMQ.PollerEvent.POLLIN);
+			result = obj.poll(0);
+		end
+
+		function result = pollout(obj)
+			obj.register(obj.socket.pointer, jzmq.ZMQ.PollerEvent.POLLOUT);
+			result = obj.poll(0);
+		end
+
+		function result = pollerr(obj)
+			obj.register(obj.socket.pointer, jzmq.ZMQ.PollerEvent.POLLERR);
+			result = obj.poll(0);
+		end
     end
 end

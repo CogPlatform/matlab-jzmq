@@ -1,12 +1,15 @@
 classdef ZPoller < handle
-    properties ( Access = private )
-        pollerPointer
+    properties ( GetAccess = public, SetAccess = private )
+        pointer
     end
 
     methods
         %TODO:
         function obj = ZPoller(context)
-            obj.pollerPointer = org.zeromq.ZPoller(context);
+            if isa(context, 'jzmq.ZContext')
+                context = context.pointer;
+            end
+            obj.pointer = org.zeromq.ZPoller(context);
         end
 
         %TODO:
@@ -17,10 +20,9 @@ classdef ZPoller < handle
                 events (1, 1) jzmq.PollEvent
             end
 
-            obj.pollerPointer.register(socket, events);
+            obj.pointer.register(socket, events);
         end
 
-        %TODO:
         function events = poll(obj, timeout)
             arguments (Input)
                 obj (1, 1) ZPoller
@@ -30,7 +32,41 @@ classdef ZPoller < handle
                 events (1, 1) double
             end
 
-            events = obj.pollerPointer.poll(timeout);
+            events = obj.pointer.poll(timeout);
         end
+
+        function result = isReadable(obj, socket)
+            arguments (Input)
+                obj (1, 1) jzmq.ZPoller
+                socket (1, 1)
+            end
+            arguments (Output)
+                result (1, 1) boolean
+            end
+            result = obj.pointer.isReadable(socket);
+        end
+
+        function result = isWritable(obj, socket)
+            arguments (Input)
+                obj (1, 1) jzmq.ZPoller
+                socket (1, 1)
+            end
+            arguments (Output)
+                result (1, 1) boolean
+            end
+            result = obj.pointer.isWritable(socket);
+        end
+
+        function result = isError(obj, socket)
+            arguments (Input)
+                obj (1, 1) jzmq.ZPoller
+                socket (1, 1)
+            end
+            arguments (Output)
+                result (1, 1) boolean
+            end
+            result = obj.pointer.isError(socket);
+        end
+
     end
 end
