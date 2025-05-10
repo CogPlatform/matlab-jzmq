@@ -31,7 +31,7 @@ classdef Poller < handle
             arguments
                 obj
                 socket (1, 1) jzmq.ZMQ.Socket
-                event (1, 1) int32 = 1
+                event (1, 1) jzmq.ZMQ.PollerEvent = jzmq.ZMQ.PollerEvent.POLLIN
 			end
 
 			obj.socket = socket;
