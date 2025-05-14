@@ -42,6 +42,10 @@ classdef Socket < handle
 			end
 
 			result = obj.pointer.bind(addr);
+			
+			if ~result
+				warning('jzmq.ZMQ.Socket:bind','Cannot bind!')
+			end
 		end
 
 		% ===================================================================
@@ -134,7 +138,7 @@ classdef Socket < handle
 
 		
 		% ===================================================================
-		function result = send(obj, data)
+		function result = send(obj, data, flags)
 		%send Queues a message created from data, so it can be sent.
 		%   send(obj, data, flags) Queues a message created from data, so it can be sent.
 		%
@@ -150,12 +154,14 @@ classdef Socket < handle
 			arguments (Input)
 				obj
 				data (1, :) uint8 {mustBeNonempty}
+				flags = []
 			end
+
 			arguments (Output)
 				result (1, 1) logical
 			end
-			
-			result = obj.pointer.send(data);
+
+			result = obj.pointer.send(data, flags);
 		end
 
 		% ===================================================================
@@ -180,6 +186,10 @@ classdef Socket < handle
 		%       obj - A ZMQ.Socket object.
 		% ===================================================================
 			obj.pointer.close();
+		end
+		function delete(obj)
+		%> @brief Class destructor.
+			close(obj);
 		end
 	end
 end

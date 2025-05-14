@@ -1,13 +1,13 @@
 classdef Poller < handle
 	%Poller  Encapsulates a ZeroMQ poller using JeroMQ ZMQ.Poller.
-    properties ( GetAccess = public, SetAccess = private )
-        pointer % org.zeromq.ZMQ.Poller
+	properties ( GetAccess = public, SetAccess = private )
+		pointer % org.zeromq.ZMQ.Poller
 		socket
-    end
+	end
 
-    methods
-        function obj = Poller(pointer)
-            %Poller  Constructs a ZMQ.Poller object.
+	methods
+		function obj = Poller(pointer)
+			%Poller  Constructs a ZMQ.Poller object.
 			%   obj = Poller(pointer) creates a ZMQ.Poller object
 			%
 			%   Inputs:
@@ -16,11 +16,11 @@ classdef Poller < handle
 			%   Outputs:
 			%       obj     - A ZMQ.Poller object.
 
-            obj.pointer = pointer;
-        end
+			obj.pointer = pointer;
+		end
 
-        function register(obj, socket, event)
-            %register  Register a Socket for polling on the specified events.
+		function register(obj, socket, event)
+			%register  Register a Socket for polling on the specified events.
 			%   rigister(obj, socket, events) Register a Socket for polling on the specified events.
 			%
 			%   Inputs:
@@ -28,54 +28,75 @@ classdef Poller < handle
 			%       socket  - The Socket we are registering.
 			%       events  - A mask composed by BITORing POLLIN, POLLOUT and POLLERR.
 
-            arguments
-                obj
-                socket (1, 1) jzmq.ZMQ.Socket
-                event (1, 1) int32 = 1
+			arguments
+				obj
+				socket (1, 1) jzmq.ZMQ.Socket
+				event (1, 1) int32 = 1
 			end
 
 			obj.socket = socket;
 
-            obj.pointer.register(socket.pointer, int32(event));
-        end
+			obj.pointer.register(socket.pointer, int32(event));
+		end
 
-        function events = poll(obj, tout)
-            %poll  Issue a poll call, using the specified timeout value.
+		function events = poll(obj, tout)
+			%poll  Issue a poll call, using the specified timeout value.
 			%   poll(obj, timeout) Issue a poll call, using the specified timeout value.
 			%
 			%   Inputs:
 			%       obj     - A jzmq.ZMQ.Poller object.
-            %       tout - the timeout, as per zmq_poll (); if -1, it will block indefinitely 
-            %                 until an event happens; if 0, it will return immediately; otherwise, 
-            %                 it will wait for at most that many milliseconds/microseconds
+			%       tout - the timeout, as per zmq_poll (); if -1, it will block indefinitely 
+			%                 until an event happens; if 0, it will return immediately; otherwise, 
+			%                 it will wait for at most that many milliseconds/microseconds
 			%
 			%   Outputs:
 			%       events  - How many objects where signaled by poll ()
 
-            arguments (Input)
-                obj
-                tout (1, 1) double = 0
-            end
-            arguments (Output)
-                events (1, 1) double
-            end
+			arguments (Input)
+				obj
+				tout (1, 1) double = 0
+			end
+			arguments (Output)
+				events (1, 1) double
+			end
 
-            events = obj.pointer.poll(tout);
+			events = obj.pointer.poll(tout);
 		end
 
-		function result = pollin(obj)
+		function result = pollin(obj, time)
+			arguments (Input)
+				obj
+				time (1, 1) double = 0
+			end
+			arguments (Output)
+				result (1, 1) logical
+			end
 			obj.register(obj.socket.pointer, jzmq.ZMQ.PollerEvent.POLLIN);
-			result = obj.poll(0);
+			result = obj.poll(time);
 		end
 
-		function result = pollout(obj)
+		function result = pollout(obj, time)
+			arguments (Input)
+				obj
+				time (1, 1) double = 0
+			end
+			arguments (Output)
+				result (1, 1) logical
+			end
 			obj.register(obj.socket.pointer, jzmq.ZMQ.PollerEvent.POLLOUT);
-			result = obj.poll(0);
+			result = obj.poll(time);
 		end
 
-		function result = pollerr(obj)
+		function result = pollerr(obj, time)
+			arguments (Input)
+				obj
+				time (1, 1) double = 0
+			end
+			arguments (Output)
+				result (1, 1) logical
+			end
 			obj.register(obj.socket.pointer, jzmq.ZMQ.PollerEvent.POLLERR);
-			result = obj.poll(0);
+			result = obj.poll(time);
 		end
-    end
+	end
 end
