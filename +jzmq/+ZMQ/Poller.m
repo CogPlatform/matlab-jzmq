@@ -39,6 +39,22 @@ classdef Poller < handle
 			obj.pointer.register(socket.pointer, int32(event));
 		end
 
+		function unregister(obj, socket)
+			%unregister  Unregister a Socket.
+			%   unregister(obj, socket) Unregister a Socket for polling.
+			%
+			%   Inputs:
+			%       obj     - A jzmq.ZMQ.Poller object.
+			%       socket  - The Socket we are registering.
+			
+			arguments
+				obj
+				socket (1, 1) jzmq.ZMQ.Socket
+			end
+
+			obj.pointer.unregister(socket.pointer);
+		end
+
 		function events = poll(obj, tout)
 			%poll  Issue a poll call, using the specified timeout value.
 			%   poll(obj, timeout) Issue a poll call, using the specified timeout value.
@@ -98,5 +114,23 @@ classdef Poller < handle
 			obj.register(obj.socket.pointer, jzmq.ZMQ.PollerEvent.POLLERR);
 			result = obj.poll(time);
 		end
+
+		function socket = getSocket(obj)
+			
+			socket = obj.pointer.getSocket();
+			
+		end
+
+		function close(obj)
+			if ~isempty(obj.socket) && isa(obj.socket,'jzmq.ZMQ.Socket')
+				try obj.unregister(obj.socket.pointer); end %#ok<*TRYNC>
+			end
+			obj.socket = [];
+			obj.pointer.close();
+		end
+		function delete(obj)
+			close(obj);
+		end
+
 	end
 end
