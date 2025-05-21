@@ -3,6 +3,10 @@ classdef Socket < handle
 	
 	properties (GetAccess = public, SetAccess = private)
 		pointer
+		% status of bind
+		isBind = false
+		% status of connect
+		isConnect = false
 	end
 	
 	methods
@@ -42,6 +46,8 @@ classdef Socket < handle
 			end
 
 			result = obj.pointer.bind(addr);
+
+			obj.isBind = result;
 			
 			if ~result
 				warning('jzmq.ZMQ.Socket:bind','Cannot bind!')
@@ -69,6 +75,9 @@ classdef Socket < handle
 
 			% Unbind the JeroMQ ZSocket
 			result = obj.pointer.unbind(addr);
+
+			obj.isBind = ~result;
+
 		end
 
 		% ===================================================================
@@ -91,6 +100,8 @@ classdef Socket < handle
 			end
 			
 			result = obj.pointer.connect(addr);
+
+			obj.isConnect = result;
 
 			if ~result
 				warning('jzmq.ZMQ.Socket:connect','Cannot connect!')
@@ -116,6 +127,9 @@ classdef Socket < handle
 			end
 
 			result = obj.pointer.disconnect(addr);
+
+			obj.isConnect = ~result;
+
 		end
 
 		% ===================================================================
@@ -161,7 +175,11 @@ classdef Socket < handle
 				result (1, 1) logical
 			end
 
-			result = obj.pointer.send(data, flags);
+			if isempty(flags) && isinteger(flags)
+				result = obj.pointer.send(data, flags);
+			else
+				result = obj.pointer.send(data);
+			end
 		end
 
 		% ===================================================================
@@ -185,10 +203,13 @@ classdef Socket < handle
 		%   Inputs:
 		%       obj - A ZMQ.Socket object.
 		% ===================================================================
+			obj.isBind = false;
+			obj.isConnect = false;
 			obj.pointer.close();
 		end
+		% ===================================================================
 		function delete(obj)
-		%> @brief Class destructor.
+		% ===================================================================
 			close(obj);
 		end
 	end

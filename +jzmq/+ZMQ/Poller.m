@@ -21,7 +21,7 @@ classdef Poller < handle
 
 		function register(obj, socket, event)
 			%register  Register a Socket for polling on the specified events.
-			%   rigister(obj, socket, events) Register a Socket for polling on the specified events.
+			%   register(obj, socket, event) Register a Socket for polling on the specified event.
 			%
 			%   Inputs:
 			%       obj     - A jzmq.ZMQ.Poller object.
@@ -34,9 +34,11 @@ classdef Poller < handle
 				event (1, 1) int32 = 1
 			end
 
-			obj.socket = socket;
+			if ~isa(obj.socket, 'jzmq.ZMQ.Socket')
+				obj.socket = socket;
+			end
 
-			obj.pointer.register(socket.pointer, int32(event));
+			obj.pointer.register(obj.socket.pointer, int32(event));
 		end
 
 		function unregister(obj, socket)
@@ -87,7 +89,7 @@ classdef Poller < handle
 			arguments (Output)
 				result (1, 1) logical
 			end
-			obj.register(obj.socket.pointer, jzmq.ZMQ.PollerEvent.POLLIN);
+			obj.register(obj.socket, jzmq.ZMQ.PollerEvent.POLLIN);
 			result = obj.poll(time);
 		end
 
@@ -99,7 +101,7 @@ classdef Poller < handle
 			arguments (Output)
 				result (1, 1) logical
 			end
-			obj.register(obj.socket.pointer, jzmq.ZMQ.PollerEvent.POLLOUT);
+			obj.register(obj.socket, jzmq.ZMQ.PollerEvent.POLLOUT);
 			result = obj.poll(time);
 		end
 
@@ -111,7 +113,7 @@ classdef Poller < handle
 			arguments (Output)
 				result (1, 1) logical
 			end
-			obj.register(obj.socket.pointer, jzmq.ZMQ.PollerEvent.POLLERR);
+			obj.register(obj.socket, jzmq.ZMQ.PollerEvent.POLLERR);
 			result = obj.poll(time);
 		end
 
@@ -123,7 +125,7 @@ classdef Poller < handle
 
 		function close(obj)
 			if ~isempty(obj.socket) && isa(obj.socket,'jzmq.ZMQ.Socket')
-				try obj.unregister(obj.socket.pointer); end %#ok<*TRYNC>
+				try obj.unregister(obj.socket); end %#ok<*TRYNC>
 			end
 			obj.socket = [];
 			obj.pointer.close();
