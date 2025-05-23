@@ -7,6 +7,8 @@ classdef Socket < handle
 		isBind = false
 		% status of connect
 		isConnect = false
+		% object uuid
+		uuid
 	end
 	
 	methods
@@ -22,6 +24,7 @@ classdef Socket < handle
 		%       obj     - A ZMQ.Socket object.
 		% ===================================================================
 			obj.pointer = socket;
+			obj.uuid = num2str(dec2hex(floor((now - floor(now))*1e10)));
 		end
 		
 		% ===================================================================

@@ -1,11 +1,16 @@
 classdef Poller < handle
 	%Poller  Encapsulates a ZeroMQ poller using JeroMQ ZMQ.Poller.
 	properties ( GetAccess = public, SetAccess = private )
-		pointer % org.zeromq.ZMQ.Poller
+		% org.zeromq.ZMQ.Poller
+		pointer 
+		% socket that waa registered
 		socket
+		% object uuid
+		uuid
 	end
 
 	methods
+		% ===================================================================
 		function obj = Poller(pointer)
 			%Poller  Constructs a ZMQ.Poller object.
 			%   obj = Poller(pointer) creates a ZMQ.Poller object
@@ -15,10 +20,11 @@ classdef Poller < handle
 			%
 			%   Outputs:
 			%       obj     - A ZMQ.Poller object.
-
 			obj.pointer = pointer;
+			obj.uuid = num2str(dec2hex(floor((now - floor(now))*1e10)));
 		end
 
+		% ===================================================================
 		function register(obj, socket, event)
 			%register  Register a Socket for polling on the specified events.
 			%   register(obj, socket, event) Register a Socket for polling on the specified event.
@@ -27,7 +33,6 @@ classdef Poller < handle
 			%       obj     - A jzmq.ZMQ.Poller object.
 			%       socket  - The Socket we are registering.
 			%       events  - A mask composed by BITORing POLLIN, POLLOUT and POLLERR.
-
 			arguments
 				obj
 				socket (1, 1) jzmq.ZMQ.Socket
@@ -41,6 +46,7 @@ classdef Poller < handle
 			obj.pointer.register(obj.socket.pointer, int32(event));
 		end
 
+		% ===================================================================
 		function unregister(obj, socket)
 			%unregister  Unregister a Socket.
 			%   unregister(obj, socket) Unregister a Socket for polling.
@@ -48,7 +54,6 @@ classdef Poller < handle
 			%   Inputs:
 			%       obj     - A jzmq.ZMQ.Poller object.
 			%       socket  - The Socket we are registering.
-			
 			arguments
 				obj
 				socket (1, 1) jzmq.ZMQ.Socket
@@ -57,6 +62,7 @@ classdef Poller < handle
 			obj.pointer.unregister(socket.pointer);
 		end
 
+		% ===================================================================
 		function events = poll(obj, tout)
 			%poll  Issue a poll call, using the specified timeout value.
 			%   poll(obj, timeout) Issue a poll call, using the specified timeout value.
@@ -69,11 +75,11 @@ classdef Poller < handle
 			%
 			%   Outputs:
 			%       events  - How many objects where signaled by poll ()
-
 			arguments (Input)
 				obj
 				tout (1, 1) double = 0
 			end
+
 			arguments (Output)
 				events (1, 1) double
 			end
@@ -81,6 +87,7 @@ classdef Poller < handle
 			events = obj.pointer.poll(tout);
 		end
 
+		% ===================================================================
 		function result = pollin(obj, time)
 			arguments (Input)
 				obj
@@ -93,6 +100,7 @@ classdef Poller < handle
 			result = obj.poll(time);
 		end
 
+		% ===================================================================
 		function result = pollout(obj, time)
 			arguments (Input)
 				obj
@@ -105,6 +113,7 @@ classdef Poller < handle
 			result = obj.poll(time);
 		end
 
+		% ===================================================================
 		function result = pollerr(obj, time)
 			arguments (Input)
 				obj
@@ -117,12 +126,14 @@ classdef Poller < handle
 			result = obj.poll(time);
 		end
 
+		% ===================================================================
 		function socket = getSocket(obj)
 			
 			socket = obj.pointer.getSocket();
 			
 		end
 
+		% ===================================================================
 		function close(obj)
 			if ~isempty(obj.socket) && isa(obj.socket,'jzmq.ZMQ.Socket')
 				try obj.unregister(obj.socket); end %#ok<*TRYNC>
@@ -130,6 +141,8 @@ classdef Poller < handle
 			obj.socket = [];
 			obj.pointer.close();
 		end
+
+		% ===================================================================
 		function delete(obj)
 			close(obj);
 		end

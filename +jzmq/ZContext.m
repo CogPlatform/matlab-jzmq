@@ -6,6 +6,8 @@ classdef ZContext < handle
 	properties (GetAccess = public, SetAccess = private)
 		%pointer  Reference to the underlying JeroMQ context.
 		pointer
+		% object uuid
+		uuid
 	end
 
 	methods
@@ -27,6 +29,7 @@ classdef ZContext < handle
 
 			% Create a ZContext which is used by ZSocket
 			obj.pointer = org.zeromq.ZContext();
+			obj.uuid = num2str(dec2hex(floor((now - floor(now))*1e10)));
 		end
 
 		% ===================================================================
