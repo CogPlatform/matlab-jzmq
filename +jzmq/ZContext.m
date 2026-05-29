@@ -22,8 +22,8 @@ classdef ZContext < handle
 				warning('zmq:Context:extraConstructArgs','Extraneous constructor arguments.');
 			end
 
-			if ~any(contains(javaclasspath, 'jeromq-0.7.0.jar'))
-				javaaddpath([fileparts(mfilename('fullpath')) filesep 'jeromq-0.7.0.jar'],'-begin');
+			if ~any(contains(javaclasspath, 'jeromq-0.6.0.jar'))
+				javaaddpath([fileparts(mfilename('fullpath')) filesep 'jeromq-0.6.0.jar'],'-begin');
 				fprintf('Added JeroMQ jar to javaclasspath.\n');
 			end
 
