@@ -145,12 +145,21 @@ classdef Socket < handle
 		%
 		%   Outputs:
 		%       data - the message received, as an array of bytes; null on error.
+		%       Java bytes are signed, so the incoming int8 array is
+		%       bit-cast to uint8 (a direct conversion would saturate
+		%       values >= 128 to zero).
 		% ===================================================================
 			arguments (Output)
 				data (1, :) uint8
 			end
-			
-			data = obj.pointer.recv();
+
+			raw = obj.pointer.recv();
+			if isa(raw, 'int8')
+				%> bit-cast signed Java bytes to uint8; normalise to a
+				%> row vector regardless of the bridge's orientation.
+				raw = reshape(typecast(raw(:), 'uint8'), 1, []);
+			end
+			data = raw;
 		end
 
 		
@@ -162,6 +171,9 @@ classdef Socket < handle
 		%   Inputs:
 		%       obj    - A ZMQ.Socket object.
 		%       data  - the data to send.
+		%       flags - optional send flags; either an integer bitmask
+		%           (e.g. org.zeromq.ZMQ.SNDMORE) or text such as 'sndmore'
+		%           or 'dontwait'. Empty sends without flags.
 		%
 		%   Outputs:
 		%       result - true when it has been queued on the socket and ØMQ has assumed 
@@ -178,10 +190,19 @@ classdef Socket < handle
 				result (1, 1) logical
 			end
 
-			if isempty(flags) && isinteger(flags)
-				result = obj.pointer.send(data, flags);
-			else
+			if isempty(flags)
 				result = obj.pointer.send(data);
+			elseif ischar(flags) || isstring(flags)
+				switch lower(string(flags))
+					case "sndmore"
+						result = obj.pointer.send(data, org.zeromq.ZMQ.SNDMORE);
+					case "dontwait"
+						result = obj.pointer.send(data, org.zeromq.ZMQ.DONTWAIT);
+					otherwise
+						error('jzmq:ZMQ:Socket:send', 'Unsupported send flag "%s".', flags);
+				end
+			else
+				result = obj.pointer.send(data, flags);
 			end
 		end
 
